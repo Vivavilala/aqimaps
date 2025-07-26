@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Route with AQI Markers</title>
+    <style>
+        #map {
+            height: 90vh;
+            width: 100%;
+        }
+        #inputs {
+            margin: 10px;
+        }
+        #legend {
+            background: white;
+            padding: 10px;
+            margin: 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .color-box {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="inputs">
+        <input type="text" id="origin" placeholder="Enter origin (e.g., Noida)">
+        <input type="text" id="destination" placeholder="Enter destination (e.g., Gurgaon)">
+        <button onclick="submitRoute()">Show Route with AQI</button>
+    </div>
+
+    <div id="map"></div>
+
+    <div id="legend">
+        <strong>AQI Legend</strong>
+        <div class="legend-item"><div class="color-box" style="background: green;"></div> 1–50: Good</div>
+        <div class="legend-item"><div class="color-box" style="background: yellow;"></div> 51–100: Moderate</div>
+        <div class="legend-item"><div class="color-box" style="background: orange;"></div> 101–150: Unhealthy for Sensitive Groups</div>
+        <div class="legend-item"><div class="color-box" style="background: red;"></div> 151–200: Unhealthy</div>
+        <div class="legend-item"><div class="color-box" style="background: purple;"></div> 201-300: Very Unhealthy</div>
+        <div class="legend-item"><div class="color-box" style="background: maroon;"></div> 301+: Hazardous</div>
+        <div class="legend-item"><div class="color-box" style="background: gray;"></div> No Data</div>
+    </div>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDCSTcE1rfryW4t-b5_nwKIHxavG2GCbfY&libraries=geometry"></script>
+    <script>
+        let map;
+        let polyline = null;
+        let markers = [];
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 10,
+                center: { lat: 28.61, lng: 77.23 }, // Centered on Delhi
+            });
+	      map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(document.getElementById('legend'));
+
+        }
+
+        function submitRoute() {
+            const origin = document.getElementById("origin").value;
+            const destination = document.getElementById("destination").value;
+            if (!origin || !destination) {
+                alert("Please enter both origin and destination.");
+                return;
+            }
+            drawRouteWithAQI(origin, destination);
+        }
+
+        async function drawRouteWithAQI(origin, destination) {
+            const res = await fetch(`http://localhost:8000/get_route?origin=${origin}&destination=${destination}`);
+            const data = await res.json();
+
+            if (data.polyline) {
+                // Clear old route and markers
+                if (polyline) polyline.setMap(null);
+                markers.forEach(m => m.setMap(null));
+                markers = [];
+
+                const decodedPath = google.maps.geometry.encoding.decodePath(data.polyline);
+                polyline = new google.maps.Polyline({
+                    path: decodedPath,
+                    geodesic: true,
+                    strokeColor: '#4285F4',
+                    strokeOpacity: 1.0,
+                    strokeWeight: 5,
+                    map: map
+                });
+
+                // Fit map to route
+                const bounds = new google.maps.LatLngBounds();
+                decodedPath.forEach(p => bounds.extend(p));
+                map.fitBounds(bounds);
+
+                // Place AQI markers
+                for (const point of data.aqi_points) {
+                    const color = getColor(point.aqi);
+                    const marker = new google.maps.Marker({
+                        position: { lat: point.lat, lng: point.lon },
+                        map: map,
+                        label: {
+                            text: point.aqi === 0 ? "N" : String(point.aqi),
+                            fontSize: "14px",
+                            color: "white"
+                        },
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            fillColor: color,
+                            fillOpacity: 1.0,
+                            scale: 15,
+                            strokeColor: "white",
+                            strokeWeight: 1
+                        }
+                    });
+                    markers.push(marker);
+                }
+            } else {
+                alert("Error: " + (data.error || "Unable to fetch route"));
+            }
+        }
+
+        function getColor(aqi) {
+            if (aqi === 0) return "gray";
+            if (aqi <= 50) return "green";
+            if (aqi <= 100) return "yellow";
+            if (aqi <= 150) return "orange";
+            if (aqi <= 200) return "red";
+            if (aqi <=300) return "purple";
+            return "maroon";
+        }
+
+        window.onload = initMap;
+    </script>
+</body>
+</html>
