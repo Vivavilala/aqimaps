@@ -15,11 +15,6 @@ from fastapi.templating import Jinja2Templates
 # Setup template directory
 templates = Jinja2Templates(directory="templates")
 
-# Route to serve frontend
-@app.get("/", response_class=HTMLResponse)
-async def serve_frontend(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
-
 
 app = FastAPI()
 
@@ -32,9 +27,11 @@ app.add_middleware(
 )
 load_dotenv()
 
-# API keys
-#GOOGLE_MAPS_API_KEY = "AIzaSyDYii2HkNc4hg_F02LrkOGJGDHafIfA8JA"
-#OPENAQ_API_KEY = "72771e15d9a59349200c0fd0f30ec809a169c73e8cad9b5593af2198a6fa6bd4"
+# Route to serve frontend
+@app.get("/", response_class=HTMLResponse)
+async def serve_frontend(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 OPENAQ_API_KEY = os.getenv("OPENAQ_API_KEY")
 #print(GOOGLE_MAPS_API_KEY)
