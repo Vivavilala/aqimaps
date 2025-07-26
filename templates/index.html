@@ -75,7 +75,7 @@
         }
 
         async function drawRouteWithAQI(origin, destination) {
-            const res = await fetch(`http://localhost:8000/get_route?origin=${origin}&destination=${destination}`);
+            const res = await fetch(`/get_route?origin=${origin}&destination=${destination}`);
             const data = await res.json();
 
             if (data.polyline) {
