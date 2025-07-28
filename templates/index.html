@@ -84,16 +84,18 @@
                 markers.forEach(m => m.setMap(null));
                 markers = [];
 
-                const decodedPath = google.maps.geometry.encoding.decodePath(data.polyline);
-                polyline = new google.maps.Polyline({
-                    path: decodedPath,
-                    geodesic: true,
-                    strokeColor: '#4285F4',
-                    strokeOpacity: 1.0,
-                    strokeWeight: 5,
-                    map: map
-                });
-
+                for (let i=0; i<data.polyline.length; i++) {
+                    const decodedPath = google.maps.geometry.encoding.decodePath(data.polyline[i]);
+                
+                    polyline = new google.maps.Polyline({
+                        path: decodedPath,
+                        geodesic: true,
+                        strokeColor: i === 0 ? "blue" : "gray",
+                        strokeOpacity: 1.0,
+                        strokeWeight: 5,
+                        map: map
+                    });
+                }
                 // Fit map to route
                 const bounds = new google.maps.LatLngBounds();
                 decodedPath.forEach(p => bounds.extend(p));

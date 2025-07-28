@@ -64,44 +64,50 @@ def get_route(origin: str = Query(...), destination: str = Query(...)):
             "origin": start_coords,
             "destination": end_coords,
             "mode": "driving",
+            "alternatives": "true",
             "key": GOOGLE_MAPS_API_KEY
         }
         response = requests.get(directions_url, params=params)
         data = response.json()
         #print (response)
         #print (data)
-        polyline_str = data['routes'][0]['overview_polyline']['points']
-        coordinates = polyline.decode(polyline_str)
-
-        # Sample every Nth point for waypoints
-        num_waypoints = len(coordinates)
-        if num_waypoints >20 :
-            offset = max(1, int(num_waypoints /10))
-        elif num_waypoints >10 :
-            offset = max(1,int(num_waypoints/5))
-        else :
-            offset = 2
-        #print (num_waypoints,offset)
-        waypoint_coords = [coordinates[i] for i in range(0, num_waypoints, offset)]
-
-        # Add start and end manually
-        waypoint_coords.insert(0, (sLat, sLong))
-        waypoint_coords.append((eLat, eLong))
-        #print ("waypoint coords={}",waypoint_coords)
-
         results = []
-        for lat, lon in waypoint_coords:
-            pm25 = fetch_pm25_from_openaq(lat, lon)
-            aqi = compute_aqi_pm25(pm25) if pm25 is not None else 0
-            if aqi ==0 :
-                aqi = fetch_aqi_from_google(lat,lon)
-            #print("lat={} long={} aqi={}",lat,lon,aqi)
-            results.append({"lat": lat, "lon": lon, "pm25": pm25, "aqi": aqi})
+        polyline_list = []
+
+        for i, route in enumerate(data["routes"]):
+            polyline_str = route["overview_polyline"]["points"]
+            polyline_list.append(polyline_str)
+            #polyline_str = data['routes'][0]['overview_polyline']['points']
+            coordinates = polyline.decode(polyline_str)
+
+            # Sample every Nth point for waypoints
+            num_waypoints = len(coordinates)
+            if num_waypoints >20 :
+                offset = max(1, int(num_waypoints /10))
+            elif num_waypoints >10 :
+                offset = max(1,int(num_waypoints/5))
+            else :
+                offset = 2
+            #print (num_waypoints,offset)
+            waypoint_coords = [coordinates[i] for i in range(0, num_waypoints, offset)]
+
+            # Add start and end manually
+            waypoint_coords.insert(0, (sLat, sLong))
+            waypoint_coords.append((eLat, eLong))
+            #print ("waypoint coords={}",waypoint_coords)
+
+            for lat, lon in waypoint_coords:
+                pm25 = fetch_pm25_from_openaq(lat, lon)
+                aqi = compute_aqi_pm25(pm25) if pm25 is not None else 0
+                if aqi ==0 :
+                    aqi = fetch_aqi_from_google(lat,lon)
+                #print("lat={} long={} aqi={}",lat,lon,aqi)
+                results.append({"lat": lat, "lon": lon, "pm25": pm25, "aqi": aqi})
 
         #print (results)
         #print (polyline_str)
         return  {
-            "polyline":polyline_str,
+            "polyline":polyline_list,
             "aqi_points":results
         }
     
