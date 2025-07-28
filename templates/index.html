@@ -87,9 +87,11 @@
                     alert ("polyline length ="+data.polyline.length)
                     alert ("aqi points size="+data.aqi_points.length)
                 }
-                for (let i=0; i<data.polyline.length; i++) {
+                for (let i=data.polyline.length-1; i>=0; i--) {
                     const decodedPath = google.maps.geometry.encoding.decodePath(data.polyline[i]);
-                    alert("polyline id ="+i)
+                    if (data.debugMode ==1) {
+                        alert("polyline id ="+i)
+                    }
                 
                     polyline = new google.maps.Polyline({
                         path: decodedPath,
@@ -99,11 +101,12 @@
                         strokeWeight: 5,
                         map: map
                     });
-                }
+                
                 // Fit map to route
-                const bounds = new google.maps.LatLngBounds();
-                decodedPath.forEach(p => bounds.extend(p));
-                map.fitBounds(bounds);
+                    const bounds = new google.maps.LatLngBounds();
+                    decodedPath.forEach(p => bounds.extend(p));
+                    map.fitBounds(bounds);
+                }
 
                 // Place AQI markers
                 for (const point of data.aqi_points) {
