@@ -77,30 +77,43 @@
         async function drawRouteWithAQI(origin, destination) {
             const res = await fetch(`/get_route?origin=${origin}&destination=${destination}`);
             const data = await res.json();
+            let polyline_hist =[]
+            let best_aqi_path = 0
 
             if (data.polyline) {
                 // Clear old route and markers
-                if (polyline) polyline.setMap(null);
+                 for (let polyline of polyline_hist) {
+                        polyline.setMap(null); // Remove from map
+                }
+                polyline_hist = []; // Clear the array
+
                 markers.forEach(m => m.setMap(null));
                 markers = [];
                 if (data.debugMode == 1) {
                     alert ("polyline length ="+data.polyline.length)
                     alert ("aqi points size="+data.aqi_points.length)
                 }
+                best_aqi_path = data.best_aqi_path_index
                 for (let i=data.polyline.length-1; i>=0; i--) {
                     const decodedPath = google.maps.geometry.encoding.decodePath(data.polyline[i]);
                     if (data.debugMode ==1) {
                         alert("polyline id ="+i)
                     }
+                    if (i==best_aqi_path) {strColor = "green"}
+                    else  if (i==0) {strColor ="blue"}
+                    else {strColor = "gray"}
+
+
                 
                     polyline = new google.maps.Polyline({
                         path: decodedPath,
                         geodesic: true,
-                        strokeColor: i === 0 ? "blue" : "gray",
+                        strokeColor: strColor,
                         strokeOpacity: 1.0,
                         strokeWeight: 5,
                         map: map
                     });
+                    polyline_hist.push(polyline)
                 
                 // Fit map to route
                     const bounds = new google.maps.LatLngBounds();

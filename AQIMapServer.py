@@ -74,6 +74,8 @@ def get_route(origin: str = Query(...), destination: str = Query(...)):
         #print (data)
         results = []
         polyline_list = []
+        best_aqi_value = 10000000
+        best_aqi_path = 0
 
         for i, route in enumerate(data["routes"]):
             if (debugMode) :
@@ -98,6 +100,7 @@ def get_route(origin: str = Query(...), destination: str = Query(...)):
             waypoint_coords.insert(0, (sLat, sLong))
             waypoint_coords.append((eLat, eLong))
             #print ("waypoint coords={}",waypoint_coords)
+            path_aqi = 0
 
             for lat, lon in waypoint_coords:
                 pm25 = fetch_pm25_from_openaq(lat, lon)
@@ -107,6 +110,11 @@ def get_route(origin: str = Query(...), destination: str = Query(...)):
                 if (debugMode) :
                     print("lat={} long={} aqi={}",lat,lon,aqi)
                 results.append({"lat": lat, "lon": lon, "pm25": pm25, "aqi": aqi})
+                path_aqi = path_aqi + aqi
+            if path_aqi < best_aqi_value :
+                best_aqi_path = i
+                best_aqi_value = path_aqi
+
 
         #print (results)
         #print (polyline_str)
@@ -115,7 +123,8 @@ def get_route(origin: str = Query(...), destination: str = Query(...)):
         return  {
             "polyline":polyline_list,
             "aqi_points":results,
-            "debugMode": debugMode
+            "debugMode": debugMode,
+            "best_aqi_path_index":best_aqi_path
         }
     
     except Exception as e:
