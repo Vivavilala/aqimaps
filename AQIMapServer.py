@@ -34,6 +34,7 @@ async def serve_frontend(request: Request):
 
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 OPENAQ_API_KEY = os.getenv("OPENAQ_API_KEY")
+debugMode = os.getenv("DEBUG")
 #print(GOOGLE_MAPS_API_KEY)
 #print (OPENAQ_API_KEY)
 # Geolocator setup
@@ -75,6 +76,8 @@ def get_route(origin: str = Query(...), destination: str = Query(...)):
         polyline_list = []
 
         for i, route in enumerate(data["routes"]):
+            if (debugMode) :
+                print("Route # ",i)
             polyline_str = route["overview_polyline"]["points"]
             polyline_list.append(polyline_str)
             #polyline_str = data['routes'][0]['overview_polyline']['points']
@@ -101,14 +104,18 @@ def get_route(origin: str = Query(...), destination: str = Query(...)):
                 aqi = compute_aqi_pm25(pm25) if pm25 is not None else 0
                 if aqi ==0 :
                     aqi = fetch_aqi_from_google(lat,lon)
-                #print("lat={} long={} aqi={}",lat,lon,aqi)
+                if (debugMode) :
+                    print("lat={} long={} aqi={}",lat,lon,aqi)
                 results.append({"lat": lat, "lon": lon, "pm25": pm25, "aqi": aqi})
 
         #print (results)
         #print (polyline_str)
+        if (debugMode) :
+            print (results)
         return  {
             "polyline":polyline_list,
-            "aqi_points":results
+            "aqi_points":results,
+            "debugMode": debugMode
         }
     
     except Exception as e:

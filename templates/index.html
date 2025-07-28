@@ -83,7 +83,10 @@
                 if (polyline) polyline.setMap(null);
                 markers.forEach(m => m.setMap(null));
                 markers = [];
-
+                if (data.debugMode == 1) {
+                    alert ("polyline length =",data.polyline.length)
+                    alert ("aqi points size=",data.aqi_points.length)
+                }
                 for (let i=0; i<data.polyline.length; i++) {
                     const decodedPath = google.maps.geometry.encoding.decodePath(data.polyline[i]);
                 
