@@ -111,7 +111,6 @@
                 // Place AQI markers
                 for (const point of data.aqi_points) {
                     const color = getColor(point.aqi);
-                    alert("lat="+point.lat+" long="+point.lon+" aqi="+point.aqi)
                     const marker = new google.maps.Marker({
                         position: { lat: point.lat, lng: point.lon },
                         map: map,
