@@ -84,11 +84,12 @@
                 markers.forEach(m => m.setMap(null));
                 markers = [];
                 if (data.debugMode == 1) {
-                    alert ("polyline length =",data.polyline.length)
-                    alert ("aqi points size=",data.aqi_points.length)
+                    alert ("polyline length ="+data.polyline.length)
+                    alert ("aqi points size="+data.aqi_points.length)
                 }
                 for (let i=0; i<data.polyline.length; i++) {
                     const decodedPath = google.maps.geometry.encoding.decodePath(data.polyline[i]);
+                    alert("polyline id ="+i)
                 
                     polyline = new google.maps.Polyline({
                         path: decodedPath,
@@ -107,6 +108,7 @@
                 // Place AQI markers
                 for (const point of data.aqi_points) {
                     const color = getColor(point.aqi);
+                    alert("lat="+point.lat+" long="+point.lon+" aqi="+point.aqi)
                     const marker = new google.maps.Marker({
                         position: { lat: point.lat, lng: point.lon },
                         map: map,
